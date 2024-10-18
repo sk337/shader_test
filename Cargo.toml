@@ -4,4 +4,14 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+# gl = "0.14.0"
+# glutin = "0.32.1"
 png = "0.17.14"
+
+[profile.dev]
+opt-level = 0
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
