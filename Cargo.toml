@@ -7,6 +7,7 @@ edition = "2021"
 # gl = "0.14.0"
 # glutin = "0.32.1"
 png = "0.17.14"
+rand = "0.8.5"
 
 [profile.dev]
 opt-level = 0
@@ -15,3 +16,6 @@ opt-level = 0
 opt-level = 3
 lto = true
 codegen-units = 1
+debug-assertions = false
+strip = true
+panic = "abort"
