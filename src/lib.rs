@@ -216,7 +216,7 @@ impl Map {
         }
     }
 
-    pub fn save_to_file(&self, path: &str) {
+    pub fn save(&self, path: &str) {
         let mut encoder = png::Encoder::new(
             File::create(path).unwrap(),
             (self.width * 8 * self.sim_scale) as u32,
@@ -229,6 +229,36 @@ impl Map {
         writer.finish().unwrap();
     }
 
+    pub fn save_upscaled(&self, path: &str, scale: u64) {
+        let start_height = self.height * 8 * self.sim_scale;
+        let start_width = self.width * 8 * self.sim_scale;
+        let end_height = start_height * scale;
+        let end_width = start_width * scale;
+        let mut pixel_buffer: Vec<u8> = vec![0; (end_height * end_width * 3) as usize];
+        for y in 0..end_height {
+            for x in 0..end_width {
+                let source_x = x / scale;
+                let source_y = y / scale;
+                let source_index = (source_y * start_width + source_x) * 3;
+                let dest_index = (y * end_width + x) * 3;
+                pixel_buffer[dest_index as usize] = self.pixel_buffer[source_index as usize];
+                pixel_buffer[dest_index as usize + 1] =
+                    self.pixel_buffer[source_index as usize + 1];
+                pixel_buffer[dest_index as usize + 2] =
+                    self.pixel_buffer[source_index as usize + 2];
+            }
+        }
+        let mut encoder = png::Encoder::new(
+            File::create(path).unwrap(),
+            (end_width) as u32,
+            (end_height) as u32,
+        );
+        encoder.set_color(png::ColorType::Rgb);
+        encoder.set_depth(png::BitDepth::Eight);
+        let mut writer = encoder.write_header().unwrap();
+        writer.write_image_data(&pixel_buffer).unwrap();
+        writer.finish().unwrap();
+    }
     #[inline]
     fn is_within_square(&self, point: &Point) -> bool {
         let grid_x = (point.x) as usize;

@@ -2,7 +2,7 @@ use shader_test::{Color, Light, Map, Point};
 
 static WIDTH: u64 = 32;
 static HEIGHT: u64 = 16;
-static SCALE: u64 = 8;
+static SCALE: u64 = 2;
 
 fn main() {
     let mut map = Map::new(
@@ -16,25 +16,27 @@ fn main() {
     map.squares_from_file("map.txt".to_string());
 
     // add lights
-    // map.add_light(Light {
-    //     position: Point { x: 16.0, y: 8.0 },
-    //     color: Color {
-    //         r: 255,
-    //         g: 255,
-    //         b: 255,
-    //         a: 255,
-    //     },
-    //     intensity: 10.0,
-    //     angle: 0.0,
-    //     fov: 90.0,
-    // });
+    map.add_light(Light {
+        position: Point { x: 16.0, y: 8.0 },
+        color: Color {
+            r: 255,
+            g: 255,
+            b: 255,
+            a: 255,
+        },
+        intensity: 15.0,
+        angle: 0.0,
+        fov: 90.0,
+    });
 
     // Render the scene with ray tracing
     println!("Rendering...");
     map.render();
 
     println!("Saving to output.png...");
-    map.save_to_file("output2.png");
+    map.save("output.png");
+    println!("Saving to output2.png...");
+    // map.save_upscaled("output2.png", 8 / SCALE);
 
     println!("Done!");
 }
