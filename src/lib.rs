@@ -1,8 +1,10 @@
 use std::fs::File;
 use std::vec;
 mod color;
+mod pixel_buffer;
 mod point;
-pub use color::Color;
+pub use color::{Color, Color3};
+pub use pixel_buffer::PixelBuffer;
 pub use point::Point;
 
 #[derive(Debug)]
@@ -25,6 +27,7 @@ pub struct Map {
     pub texture: Vec<u8>,
     pub cast_step_size: f64,
     pub rays_per_degree: f64,
+    pub pixel_to_pixel_check: bool,
 }
 
 impl Map {
@@ -35,6 +38,7 @@ impl Map {
         texure_path: String,
         cast_step_size: f64,
         rays_per_degree: f64,
+        pixel_to_pixel_check: bool,
     ) -> Map {
         let reader = png::Decoder::new(File::open(texure_path).unwrap());
         let mut reader = reader.read_info().unwrap();
@@ -53,6 +57,7 @@ impl Map {
             texture,
             cast_step_size,
             rays_per_degree,
+            pixel_to_pixel_check,
         }
     }
 
@@ -110,7 +115,7 @@ impl Map {
         ]
     }
 
-    fn merge_pixel_layer(&mut self, other: Vec<u8>) {
+    fn merge_pixel_layer(&mut self, other: &Vec<u8>) {
         let mut selfi = 0;
         let mut otheri = 0;
         while selfi < self.pixel_buffer.len() {
@@ -173,13 +178,14 @@ impl Map {
         // let seed = rand::thread_rng().gen::<f64>();
         // self.color_floor(seed);
         let layer = self.color_walls();
-        self.merge_pixel_layer(layer);
+        self.merge_pixel_layer(&layer);
 
         if self.lights.len() == 0 {
             return;
         }
 
         let mut i = 0;
+        let mut layer_idx = 0;
         for y in 0..self.height * 8 * self.sim_scale {
             for x in 0..self.width * 8 * self.sim_scale {
                 let scaled_point = Point {
@@ -207,11 +213,14 @@ impl Map {
                             pixel_color = light.color.blend(pixel_color, factor);
                         }
                     }
+                } else if self.pixel_to_pixel_check {
+                    let blend = layer[i + 4];
                 }
                 self.pixel_buffer[i] = pixel_color.r;
                 self.pixel_buffer[i + 1] = pixel_color.g;
                 self.pixel_buffer[i + 2] = pixel_color.b;
                 i += 3;
+                layer_idx += 4;
             }
         }
     }
@@ -259,6 +268,7 @@ impl Map {
         writer.write_image_data(&pixel_buffer).unwrap();
         writer.finish().unwrap();
     }
+
     #[inline]
     fn is_within_square(&self, point: &Point) -> bool {
         let grid_x = (point.x) as usize;
